@@ -1,0 +1,429 @@
+---
+// Snake — vanilla JS/Canvas, no dependencies.
+// Inspired by https://github.com/Unamunoqueva/Snake (CLI Python port).
+---
+
+<div
+  class="reveal overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] shadow-2xl shadow-black/50"
+>
+  <!-- Window chrome -->
+  <header
+    class="flex items-center gap-2 border-b border-[var(--color-border)] bg-[oklch(18%_0.025_260)] px-4 py-2.5"
+  >
+    <span class="h-3 w-3 rounded-full bg-[oklch(62%_0.2_25)]"></span>
+    <span class="h-3 w-3 rounded-full bg-[oklch(78%_0.18_85)]"></span>
+    <span class="h-3 w-3 rounded-full bg-[oklch(70%_0.19_148)]"></span>
+    <span class="ml-4 font-mono text-[11px] tracking-wide text-[var(--color-muted)]">
+      snake.sh — mientras te lo piensas
+    </span>
+  </header>
+
+  <!-- Body -->
+  <div class="grid gap-6 px-5 py-6 font-mono text-sm sm:grid-cols-[auto_1fr] sm:px-8 sm:py-8">
+    <!-- Canvas + overlay -->
+    <div class="flex justify-center sm:justify-start">
+      <div
+        id="snake-stage"
+        class="relative aspect-square w-full max-w-[420px] select-none rounded-lg border border-[var(--color-border)] bg-[oklch(14%_0.02_260)] sm:w-[420px]"
+      >
+        <canvas
+          id="snake-canvas"
+          width="420"
+          height="420"
+          class="h-full w-full rounded-lg"
+          role="application"
+          aria-label="Juego de Snake. Usa las flechas o WASD para moverte, espacio para iniciar o reiniciar."
+          tabindex="0"></canvas>
+
+        <!-- Overlay (start / game over) -->
+        <div
+          id="snake-overlay"
+          class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg bg-black/55 p-6 text-center opacity-100 transition-opacity"
+        >
+          <p id="snake-overlay-title" class="text-lg font-semibold text-[var(--color-accent)]">
+            ./snake
+          </p>
+          <p id="snake-overlay-hint" class="text-[13px] text-[var(--color-fg)]/90">
+            Pulsa <kbd class="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-1.5 py-0.5 text-[11px]">ESPACIO</kbd>
+            o toca para empezar
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Side panel -->
+    <aside class="flex flex-col justify-between gap-6 text-[13px]">
+      <div>
+        <p class="text-[var(--color-muted)]">
+          <span class="text-[var(--color-accent)]">$</span> ./snake.py
+        </p>
+        <p class="mt-3 text-[var(--color-fg)]/90">
+          Mini-snake para romper el hielo. El original está en Python — este es un
+          port a canvas para que puedas jugar mientras decides si escribirme.
+        </p>
+      </div>
+
+      <dl class="grid grid-cols-2 gap-4">
+        <div class="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
+          <dt class="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
+            score
+          </dt>
+          <dd id="snake-score" class="mt-1 text-2xl font-semibold text-[var(--color-fg)]">0</dd>
+        </div>
+        <div class="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
+          <dt class="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
+            best
+          </dt>
+          <dd id="snake-best" class="mt-1 text-2xl font-semibold text-[var(--color-accent)]">0</dd>
+        </div>
+      </dl>
+
+      <div class="space-y-2 text-[var(--color-muted)]">
+        <p>
+          <span class="text-[var(--color-accent)]">↑ ↓ ← →</span> · <span class="text-[var(--color-accent)]">W A S D</span>
+          — mover
+        </p>
+        <p>
+          <span class="text-[var(--color-accent)]">␣</span> — start · reset
+        </p>
+        <p class="sm:hidden">
+          <span class="text-[var(--color-accent)]">Mobile</span> — desliza para girar, toca para empezar
+        </p>
+      </div>
+
+      <p class="text-[12px] text-[var(--color-muted)]">
+        Código original (Python):
+        <a
+          href="https://github.com/Unamunoqueva/Snake"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-[var(--color-link)] underline-offset-4 transition hover:text-[var(--color-accent)] hover:underline"
+        >
+          github.com/Unamunoqueva/Snake ↗
+        </a>
+      </p>
+    </aside>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const canvas = document.getElementById("snake-canvas") as HTMLCanvasElement | null;
+    const overlay = document.getElementById("snake-overlay") as HTMLElement | null;
+    const overlayTitle = document.getElementById("snake-overlay-title");
+    const overlayHint = document.getElementById("snake-overlay-hint");
+    const scoreEl = document.getElementById("snake-score");
+    const bestEl = document.getElementById("snake-best");
+    const stage = document.getElementById("snake-stage");
+
+    if (!canvas || !overlay || !overlayTitle || !overlayHint || !scoreEl || !bestEl || !stage) {
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const GRID = 21;                         // cells per side
+    const CELL = canvas.width / GRID;        // px per cell
+    const TICK_MS = 110;                     // base speed
+    const MIN_TICK = 60;                     // fastest speed
+    const BEST_KEY = "lupi-snake-best";
+
+    type Vec = { x: number; y: number };
+    type Dir = "up" | "down" | "left" | "right";
+
+    const DIR_VEC: Record<Dir, Vec> = {
+      up:    { x: 0, y: -1 },
+      down:  { x: 0, y: 1 },
+      left:  { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+    };
+    const OPPOSITE: Record<Dir, Dir> = {
+      up: "down", down: "up", left: "right", right: "left",
+    };
+
+    // Resolve theme colors from CSS so the game stays in sync with the palette
+    const cs = getComputedStyle(document.documentElement);
+    const COLOR = {
+      grid:   cs.getPropertyValue("--color-border").trim() || "#2a2f3a",
+      body:   cs.getPropertyValue("--color-accent").trim() || "#7ee787",
+      head:   cs.getPropertyValue("--color-accent").trim() || "#7ee787",
+      food:   cs.getPropertyValue("--color-warn").trim()   || "#f2cc60",
+      muted:  cs.getPropertyValue("--color-muted").trim()  || "#6b7280",
+    };
+
+    let snake: Vec[] = [];
+    let dir: Dir = "right";
+    let queuedDir: Dir | null = null;
+    let food: Vec = { x: 0, y: 0 };
+    let score = 0;
+    let best = Number(localStorage.getItem(BEST_KEY) || 0);
+    let running = false;
+    let gameOver = false;
+    let timer: number | null = null;
+
+    bestEl.textContent = String(best);
+
+    function sameCell(a: Vec, b: Vec) {
+      return a.x === b.x && a.y === b.y;
+    }
+
+    function placeFood() {
+      while (true) {
+        const f = {
+          x: Math.floor(Math.random() * GRID),
+          y: Math.floor(Math.random() * GRID),
+        };
+        if (!snake.some((s) => sameCell(s, f))) {
+          food = f;
+          return;
+        }
+      }
+    }
+
+    function reset() {
+      const mid = Math.floor(GRID / 2);
+      snake = [
+        { x: mid - 1, y: mid },
+        { x: mid,     y: mid },
+        { x: mid + 1, y: mid },
+      ];
+      dir = "right";
+      queuedDir = null;
+      score = 0;
+      gameOver = false;
+      scoreEl.textContent = "0";
+      placeFood();
+      draw();
+    }
+
+    function showOverlay(title: string, hint: string) {
+      overlayTitle.textContent = title;
+      overlayHint.innerHTML = hint;
+      overlay.style.opacity = "1";
+      overlay.style.pointerEvents = "auto";
+    }
+    function hideOverlay() {
+      overlay.style.opacity = "0";
+      overlay.style.pointerEvents = "none";
+    }
+
+    function start() {
+      if (running) return;
+      if (gameOver) reset();
+      running = true;
+      hideOverlay();
+      scheduleTick();
+    }
+
+    function stop(won = false) {
+      running = false;
+      gameOver = true;
+      if (timer !== null) {
+        window.clearTimeout(timer);
+        timer = null;
+      }
+      if (score > best) {
+        best = score;
+        localStorage.setItem(BEST_KEY, String(best));
+        bestEl.textContent = String(best);
+      }
+      const titleText = won ? "segment $? == full" : "game over";
+      const hint = `score: <span class="text-[var(--color-accent)]">${score}</span> · best: <span class="text-[var(--color-accent)]">${best}</span><br/>Pulsa <kbd class="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-1.5 py-0.5 text-[11px]">ESPACIO</kbd> para otra`;
+      showOverlay(titleText, hint);
+    }
+
+    function scheduleTick() {
+      // Gentle ramp: speed up slightly with score
+      const ms = Math.max(MIN_TICK, TICK_MS - Math.floor(score / 4) * 3);
+      timer = window.setTimeout(tick, ms);
+    }
+
+    function tick() {
+      if (!running) return;
+
+      if (queuedDir && queuedDir !== OPPOSITE[dir]) {
+        dir = queuedDir;
+      }
+      queuedDir = null;
+
+      const head = snake[snake.length - 1];
+      const v = DIR_VEC[dir];
+      const next: Vec = { x: head.x + v.x, y: head.y + v.y };
+
+      // Walls
+      if (next.x < 0 || next.x >= GRID || next.y < 0 || next.y >= GRID) {
+        stop();
+        draw();
+        return;
+      }
+      // Self collision (ignore current tail that will move)
+      const body = snake.slice(0, -1);
+      if (body.some((s) => sameCell(s, next))) {
+        stop();
+        draw();
+        return;
+      }
+
+      snake.push(next);
+
+      if (sameCell(next, food)) {
+        score += 1;
+        scoreEl.textContent = String(score);
+        if (snake.length >= GRID * GRID) {
+          stop(true);
+          draw();
+          return;
+        }
+        placeFood();
+      } else {
+        snake.shift();
+      }
+
+      draw();
+      scheduleTick();
+    }
+
+    function drawGrid() {
+      ctx!.fillStyle = "oklch(14% 0.02 260)";
+      ctx!.fillRect(0, 0, canvas!.width, canvas!.height);
+
+      // very subtle grid lines
+      ctx!.strokeStyle = COLOR.grid;
+      ctx!.globalAlpha = 0.25;
+      ctx!.lineWidth = 1;
+      ctx!.beginPath();
+      for (let i = 1; i < GRID; i++) {
+        ctx!.moveTo(i * CELL, 0);
+        ctx!.lineTo(i * CELL, canvas!.height);
+        ctx!.moveTo(0, i * CELL);
+        ctx!.lineTo(canvas!.width, i * CELL);
+      }
+      ctx!.stroke();
+      ctx!.globalAlpha = 1;
+    }
+
+    function drawCell(c: Vec, color: string, inset = 2) {
+      ctx!.fillStyle = color;
+      ctx!.fillRect(c.x * CELL + inset, c.y * CELL + inset, CELL - inset * 2, CELL - inset * 2);
+    }
+
+    function draw() {
+      drawGrid();
+
+      // Food — pulsing dot
+      const t = performance.now() / 400;
+      const pulse = 0.85 + Math.sin(t) * 0.15;
+      ctx!.globalAlpha = pulse;
+      drawCell(food, COLOR.food, 4);
+      ctx!.globalAlpha = 1;
+
+      // Snake body (trail)
+      for (let i = 0; i < snake.length - 1; i++) {
+        const s = snake[i];
+        const frac = i / Math.max(snake.length - 1, 1);
+        ctx!.globalAlpha = 0.45 + frac * 0.45;
+        drawCell(s, COLOR.body, 2);
+      }
+      ctx!.globalAlpha = 1;
+
+      // Head
+      if (snake.length) {
+        drawCell(snake[snake.length - 1], COLOR.head, 1);
+      }
+
+      // Score in bottom-right corner of canvas
+      ctx!.fillStyle = COLOR.muted;
+      ctx!.font = "500 11px 'JetBrains Mono', monospace";
+      ctx!.textAlign = "right";
+      ctx!.fillText(`score ${score}`, canvas!.width - 8, canvas!.height - 8);
+    }
+
+    // ---------- controls ----------
+    function setDir(d: Dir) {
+      // queue so fast double-taps don't let you U-turn into yourself
+      if (!running) return;
+      queuedDir = d;
+    }
+
+    function handleKey(e: KeyboardEvent) {
+      const key = e.key.toLowerCase();
+      if (key === " " || key === "spacebar") {
+        e.preventDefault();
+        if (!running || gameOver) start();
+        return;
+      }
+      if (key === "arrowup" || key === "w")    { setDir("up"); e.preventDefault(); }
+      else if (key === "arrowdown" || key === "s")  { setDir("down"); e.preventDefault(); }
+      else if (key === "arrowleft" || key === "a")  { setDir("left"); e.preventDefault(); }
+      else if (key === "arrowright" || key === "d") { setDir("right"); e.preventDefault(); }
+    }
+
+    // Only intercept keys when the canvas is focused or the game is visible+active
+    document.addEventListener("keydown", (e) => {
+      const target = e.target as HTMLElement | null;
+      // Don't steal keys from form inputs elsewhere on the page (none today, future-proof)
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+
+      // Only when game section is in view
+      const rect = stage.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight * 0.9 && rect.bottom > 0;
+      if (!inView && !running) return;
+
+      handleKey(e);
+    });
+
+    // Click/tap to start
+    stage.addEventListener("click", () => {
+      if (!running || gameOver) start();
+      canvas.focus();
+    });
+
+    // Touch swipe
+    let touchStart: { x: number; y: number; t: number } | null = null;
+    stage.addEventListener(
+      "touchstart",
+      (e) => {
+        if (e.touches.length !== 1) return;
+        touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+      },
+      { passive: true }
+    );
+    stage.addEventListener(
+      "touchend",
+      (e) => {
+        if (!touchStart) return;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - touchStart.x;
+        const dy = t.clientY - touchStart.y;
+        const adx = Math.abs(dx);
+        const ady = Math.abs(dy);
+        const MIN = 24;
+        if (Math.max(adx, ady) < MIN) {
+          // tap → start
+          if (!running || gameOver) start();
+        } else if (adx > ady) {
+          setDir(dx > 0 ? "right" : "left");
+        } else {
+          setDir(dy > 0 ? "down" : "up");
+        }
+        touchStart = null;
+      },
+      { passive: true }
+    );
+
+    // ---------- init ----------
+    reset();
+    showOverlay("./snake", 'Pulsa <kbd class="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-1.5 py-0.5 text-[11px]">ESPACIO</kbd> o toca para empezar');
+  })();
+</script>
+
+<style>
+  #snake-canvas {
+    image-rendering: pixelated;
+    outline: none;
+  }
+  #snake-canvas:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-accent-soft);
+  }
+</style>
