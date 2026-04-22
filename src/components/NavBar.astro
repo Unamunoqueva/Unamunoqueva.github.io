@@ -11,6 +11,14 @@ const links = [
 <nav
   class="sticky top-0 z-40 border-b border-[var(--color-border)]/60 bg-[var(--color-bg)]/70 backdrop-blur"
 >
+  <!-- Scroll progress bar -->
+  <div class="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-transparent">
+    <div
+      id="scroll-progress"
+      class="h-full origin-left scale-x-0 bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-warn)] to-[var(--color-link)] transition-transform duration-150"
+    ></div>
+  </div>
+
   <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
     <a
       href="#top"
@@ -24,7 +32,8 @@ const links = [
           <li>
             <a
               href={l.href}
-              class="text-[var(--color-muted)] transition hover:text-[var(--color-accent)]"
+              data-spy={l.href.slice(1)}
+              class="nav-link relative text-[var(--color-muted)] transition hover:text-[var(--color-accent)]"
             >
               {l.label}
             </a>
@@ -34,3 +43,63 @@ const links = [
     </ul>
   </div>
 </nav>
+
+<style>
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -6px;
+    height: 2px;
+    background: var(--color-accent);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 220ms ease;
+  }
+  .nav-link.active {
+    color: var(--color-accent);
+  }
+  .nav-link.active::after {
+    transform: scaleX(1);
+  }
+</style>
+
+<script>
+  // Scroll progress
+  const bar = document.getElementById("scroll-progress");
+  function updateProgress() {
+    if (!bar) return;
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    const pct = max > 0 ? h.scrollTop / max : 0;
+    bar.style.transform = `scaleX(${pct})`;
+  }
+  window.addEventListener("scroll", updateProgress, { passive: true });
+  window.addEventListener("resize", updateProgress);
+  updateProgress();
+
+  // Scrollspy — mark nav link of the section closest to the top as active
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(".nav-link"));
+  const sections = links
+    .map((l) => {
+      const id = l.dataset.spy || "";
+      return { link: l, section: document.getElementById(id) };
+    })
+    .filter((s): s is { link: HTMLAnchorElement; section: HTMLElement } => s.section !== null);
+
+  function updateSpy() {
+    const y = window.scrollY + 80; // offset so the active link flips just before the section top
+    let current: HTMLAnchorElement | null = null;
+    for (const { link, section } of sections) {
+      if (section.offsetTop <= y) current = link;
+    }
+    for (const { link } of sections) {
+      link.classList.toggle("active", link === current);
+    }
+  }
+  window.addEventListener("scroll", updateSpy, { passive: true });
+  window.addEventListener("resize", updateSpy);
+  updateSpy();
+</script>

@@ -64,7 +64,7 @@ const projects: Project[] = [
   {
     projects.map((p) => (
       <article
-        class="reveal group relative flex h-full flex-col rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)]/80 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-[var(--color-accent)]/60 hover:shadow-[0_0_0_1px_var(--color-accent-soft)]"
+        class="project-card reveal group relative flex h-full flex-col rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)]/80 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-[var(--color-accent)]/60 hover:shadow-[0_0_0_1px_var(--color-accent-soft),0_20px_45px_-15px_oklch(70%_0.19_148/0.25)]"
       >
         <header class="mb-3 flex items-start justify-between gap-3">
           <div>
@@ -119,3 +119,50 @@ const projects: Project[] = [
     ))
   }
 </div>
+
+<style>
+  /* Cursor-tracked glow border on hover */
+  .project-card {
+    --cx: 50%;
+    --cy: 50%;
+  }
+  .project-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(
+      260px circle at var(--cx) var(--cy),
+      oklch(78% 0.19 148 / 0.55),
+      transparent 50%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 260ms ease;
+    pointer-events: none;
+  }
+  @media (hover: hover) {
+    .project-card:hover::before {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  const cards = document.querySelectorAll<HTMLElement>(".project-card");
+  for (const card of cards) {
+    card.addEventListener("pointermove", (e) => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty("--cx", `${e.clientX - rect.left}px`);
+      card.style.setProperty("--cy", `${e.clientY - rect.top}px`);
+    });
+  }
+</script>

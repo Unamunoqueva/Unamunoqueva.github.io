@@ -1,4 +1,6 @@
 ---
+import TerminalDots from "./TerminalDots.astro";
+
 const email = "joselupi1992@gmail.com";
 const linkedin = "https://www.linkedin.com/in/jose-luis-lupiáñez-serrano/";
 const github = "https://github.com/Unamunoqueva";
@@ -6,20 +8,18 @@ const github = "https://github.com/Unamunoqueva";
 
 <div class="reveal">
   <div
-    class="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] shadow-xl"
+    class="term-window relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] shadow-xl transition-[box-shadow,border-color] duration-300 hover:border-[var(--color-accent)]/40 hover:shadow-[0_0_0_1px_var(--color-accent-soft),0_25px_60px_-15px_oklch(70%_0.19_148/0.25)]"
   >
     <header
       class="flex items-center gap-2 border-b border-[var(--color-border)] bg-[oklch(18%_0.025_260)] px-4 py-2.5"
     >
-      <span class="h-3 w-3 rounded-full bg-[oklch(62%_0.2_25)]"></span>
-      <span class="h-3 w-3 rounded-full bg-[oklch(78%_0.18_85)]"></span>
-      <span class="h-3 w-3 rounded-full bg-[oklch(70%_0.19_148)]"></span>
+      <TerminalDots />
       <span class="ml-4 font-mono text-[11px] tracking-wide text-[var(--color-muted)]">
         contact.sh
       </span>
     </header>
 
-    <div class="px-6 py-8 font-mono text-sm leading-7 sm:px-8 sm:py-10">
+    <div class="term-spotlight relative px-6 py-8 font-mono text-sm leading-7 sm:px-8 sm:py-10">
       <p class="text-[var(--color-muted)]">
         <span class="text-[var(--color-accent)]">$</span> echo "¿Quieres hablar? Tienes tres puertas."
       </p>
@@ -27,18 +27,26 @@ const github = "https://github.com/Unamunoqueva";
 
       <ul class="mt-8 space-y-4">
         <li>
-          <a
-            href={`mailto:${email}`}
-            class="group flex flex-col gap-1 rounded-md border border-transparent px-3 py-2 transition hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-bg-card)]"
+          <button
+            type="button"
+            id="copy-email-btn"
+            data-email={email}
+            class="group flex w-full flex-col gap-1 rounded-md border border-transparent px-3 py-2 text-left transition hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-bg-card)]"
           >
-            <span class="text-[11px] uppercase tracking-[0.25em] text-[var(--color-muted)]">
+            <span class="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-[var(--color-muted)]">
               email
+              <span id="copy-email-status" class="font-mono text-[10px] tracking-normal text-[var(--color-accent)] opacity-0 transition">
+                ✓ copiado
+              </span>
             </span>
             <span class="flex items-center gap-2 text-base text-[var(--color-link)] group-hover:text-[var(--color-accent)]">
               {email}
-              <span aria-hidden="true" class="opacity-0 transition group-hover:opacity-100">↗</span>
+              <span aria-hidden="true" class="opacity-0 transition group-hover:opacity-100">⎘</span>
             </span>
-          </a>
+            <span class="text-[11px] text-[var(--color-muted)]">
+              click para copiar · <a href={`mailto:${email}`} class="underline-offset-4 hover:underline" onclick="event.stopPropagation()">abrir en mail ↗</a>
+            </span>
+          </button>
         </li>
         <li>
           <a
@@ -81,3 +89,23 @@ const github = "https://github.com/Unamunoqueva";
     </div>
   </div>
 </div>
+
+<script>
+  const btn = document.getElementById("copy-email-btn") as HTMLButtonElement | null;
+  const status = document.getElementById("copy-email-status");
+  if (btn && status) {
+    btn.addEventListener("click", async () => {
+      const email = btn.dataset.email || "";
+      try {
+        await navigator.clipboard.writeText(email);
+        status.style.opacity = "1";
+        setTimeout(() => {
+          status.style.opacity = "0";
+        }, 1800);
+      } catch {
+        // Fallback: open mail client
+        window.location.href = `mailto:${email}`;
+      }
+    });
+  }
+</script>

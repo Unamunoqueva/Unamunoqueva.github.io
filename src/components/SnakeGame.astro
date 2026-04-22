@@ -1,25 +1,24 @@
 ---
 // Snake — vanilla JS/Canvas, no dependencies.
 // Inspired by https://github.com/Unamunoqueva/Snake (CLI Python port).
+import TerminalDots from "./TerminalDots.astro";
 ---
 
 <div
-  class="reveal overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] shadow-2xl shadow-black/50"
+  class="reveal term-window relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] shadow-2xl shadow-black/50 transition-[box-shadow,border-color] duration-300 hover:border-[var(--color-accent)]/40 hover:shadow-[0_0_0_1px_var(--color-accent-soft),0_25px_60px_-15px_oklch(70%_0.19_148/0.25)]"
 >
   <!-- Window chrome -->
   <header
     class="flex items-center gap-2 border-b border-[var(--color-border)] bg-[oklch(18%_0.025_260)] px-4 py-2.5"
   >
-    <span class="h-3 w-3 rounded-full bg-[oklch(62%_0.2_25)]"></span>
-    <span class="h-3 w-3 rounded-full bg-[oklch(78%_0.18_85)]"></span>
-    <span class="h-3 w-3 rounded-full bg-[oklch(70%_0.19_148)]"></span>
+    <TerminalDots />
     <span class="ml-4 font-mono text-[11px] tracking-wide text-[var(--color-muted)]">
       snake.sh — mientras te lo piensas
     </span>
   </header>
 
   <!-- Body -->
-  <div class="grid gap-6 px-5 py-6 font-mono text-sm sm:grid-cols-[auto_1fr] sm:px-8 sm:py-8">
+  <div class="term-spotlight relative grid gap-6 px-5 py-6 font-mono text-sm sm:grid-cols-[auto_1fr] sm:px-8 sm:py-8">
     <!-- Canvas + overlay -->
     <div class="flex justify-center sm:justify-start">
       <div
@@ -47,6 +46,19 @@
             Pulsa <kbd class="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-1.5 py-0.5 text-[11px]">ESPACIO</kbd>
             o toca para empezar
           </p>
+        </div>
+
+        <!-- High-score celebration flash -->
+        <div
+          id="snake-highscore"
+          class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg opacity-0 transition-opacity"
+        >
+          <div class="flex flex-col items-center gap-2 rounded-lg border border-[var(--color-accent)]/60 bg-black/70 px-6 py-4 shadow-[0_0_40px_var(--color-accent-soft)] backdrop-blur">
+            <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--color-accent)]">
+              ★ new high score
+            </span>
+            <span id="snake-highscore-value" class="font-mono text-3xl font-bold text-[var(--color-fg)]">0</span>
+          </div>
         </div>
       </div>
     </div>
@@ -223,14 +235,38 @@
         window.clearTimeout(timer);
         timer = null;
       }
-      if (score > best) {
+      const isNewBest = score > 0 && score > best;
+      if (isNewBest) {
         best = score;
         localStorage.setItem(BEST_KEY, String(best));
         bestEl.textContent = String(best);
+        celebrateHighScore(best);
       }
-      const titleText = won ? "segment $? == full" : "game over";
+      const titleText = won ? "segment $? == full" : isNewBest ? "new record!" : "game over";
       const hint = `score: <span class="text-[var(--color-accent)]">${score}</span> · best: <span class="text-[var(--color-accent)]">${best}</span><br/>Pulsa <kbd class="rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-1.5 py-0.5 text-[11px]">ESPACIO</kbd> para otra`;
-      showOverlay(titleText, hint);
+      // Let the celebration breathe before falling back to the overlay
+      const overlayDelay = isNewBest ? 1600 : 0;
+      window.setTimeout(() => showOverlay(titleText, hint), overlayDelay);
+    }
+
+    function celebrateHighScore(value: number) {
+      const el = document.getElementById("snake-highscore");
+      const valueEl = document.getElementById("snake-highscore-value");
+      if (!el || !valueEl) return;
+      valueEl.textContent = String(value);
+      el.style.opacity = "1";
+      // Brief accent flash on the canvas
+      if (ctx) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = COLOR.body;
+        ctx.globalAlpha = 0.22;
+        ctx.fillRect(0, 0, canvas!.width, canvas!.height);
+        ctx.restore();
+      }
+      window.setTimeout(() => {
+        el.style.opacity = "0";
+      }, 1400);
     }
 
     function scheduleTick() {

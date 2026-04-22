@@ -1,4 +1,6 @@
 ---
+import TerminalDots from "./TerminalDots.astro";
+
 const lines: Array<{ prompt?: string; text: string; kind?: "cmd" | "label" | "value" | "quote" | "divider" | "blank" }> = [
   { prompt: "visitor@lupi.dev", text: "whoami", kind: "cmd" },
   { text: "──────────────────────────────────────────", kind: "divider" },
@@ -27,15 +29,14 @@ const lines: Array<{ prompt?: string; text: string; kind?: "cmd" | "label" | "va
   <div class="w-full max-w-3xl">
     <!-- Fake terminal chrome -->
     <div
-      class="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] shadow-2xl shadow-black/50 backdrop-blur"
+      id="term-window"
+      class="term-window relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] shadow-2xl shadow-black/50 backdrop-blur transition-[box-shadow,border-color] duration-300 hover:border-[var(--color-accent)]/40 hover:shadow-[0_0_0_1px_var(--color-accent-soft),0_25px_60px_-15px_oklch(70%_0.19_148/0.25)]"
     >
       <!-- Window bar -->
       <header
         class="flex items-center gap-2 border-b border-[var(--color-border)] bg-[oklch(18%_0.025_260)] px-4 py-2.5"
       >
-        <span class="h-3 w-3 rounded-full bg-[oklch(62%_0.2_25)]"></span>
-        <span class="h-3 w-3 rounded-full bg-[oklch(78%_0.18_85)]"></span>
-        <span class="h-3 w-3 rounded-full bg-[oklch(70%_0.19_148)]"></span>
+        <TerminalDots />
         <span
           class="ml-4 font-mono text-[11px] tracking-wide text-[var(--color-muted)]"
         >
@@ -46,7 +47,7 @@ const lines: Array<{ prompt?: string; text: string; kind?: "cmd" | "label" | "va
       <!-- Terminal body -->
       <div
         id="term-body"
-        class="min-h-[380px] px-5 py-5 font-mono text-[13.5px] leading-7 text-[var(--color-fg)] sm:text-sm"
+        class="term-spotlight relative min-h-[380px] px-5 py-5 font-mono text-[13.5px] leading-7 text-[var(--color-fg)] sm:text-sm"
       >
         {
           lines.map((line, i) => (
@@ -178,4 +179,41 @@ const lines: Array<{ prompt?: string; text: string; kind?: "cmd" | "label" | "va
     white-space: pre-wrap;
     word-break: break-word;
   }
+
+  /* Cursor-follow spotlight — variables are updated from JS below */
+  .term-spotlight {
+    --mx: 50%;
+    --my: 50%;
+    --spot: 0;
+  }
+  .term-spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      380px circle at var(--mx) var(--my),
+      oklch(78% 0.19 148 / 0.12),
+      transparent 60%
+    );
+    opacity: var(--spot);
+    transition: opacity 220ms ease;
+  }
 </style>
+
+<script>
+  const windows = document.querySelectorAll<HTMLElement>(".term-spotlight");
+  for (const w of windows) {
+    w.addEventListener("pointermove", (e) => {
+      const rect = w.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      w.style.setProperty("--mx", `${x}px`);
+      w.style.setProperty("--my", `${y}px`);
+      w.style.setProperty("--spot", "1");
+    });
+    w.addEventListener("pointerleave", () => {
+      w.style.setProperty("--spot", "0");
+    });
+  }
+</script>

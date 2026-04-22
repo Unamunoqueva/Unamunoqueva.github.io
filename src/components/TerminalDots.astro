@@ -1,0 +1,91 @@
+---
+// Reusable macOS-style window controls with hover brighten + tooltip.
+// Purely visual — the green one sets an easter egg dataset for the stage to use.
+---
+
+<div class="term-dots" role="group" aria-label="Controles de ventana">
+  <button
+    type="button"
+    class="term-dot close"
+    data-label="close"
+    aria-label="close"
+    tabindex="-1"></button>
+  <button
+    type="button"
+    class="term-dot min"
+    data-label="minimize"
+    aria-label="minimize"
+    tabindex="-1"></button>
+  <button
+    type="button"
+    class="term-dot max"
+    data-label="maximize"
+    aria-label="maximize"
+    tabindex="-1"></button>
+</div>
+
+<style>
+  .term-dots {
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+
+  .term-dot {
+    position: relative;
+    height: 0.75rem;
+    width: 0.75rem;
+    border-radius: 9999px;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      filter 180ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .term-dot.close { background: oklch(62% 0.2 25); }
+  .term-dot.min   { background: oklch(78% 0.18 85); }
+  .term-dot.max   { background: oklch(70% 0.19 148); }
+
+  /* Tooltip */
+  .term-dot::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(2px);
+    padding: 2px 8px;
+    font: 500 10px/1 "JetBrains Mono", ui-monospace, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  @media (hover: hover) {
+    .term-dot:hover,
+    .term-dot:focus-visible {
+      transform: scale(1.15);
+      filter: brightness(1.4) saturate(1.2);
+    }
+    .term-dot.close:hover,
+    .term-dot.close:focus-visible { box-shadow: 0 0 0 3px oklch(62% 0.2 25 / 0.25), 0 0 14px oklch(62% 0.2 25 / 0.55); }
+    .term-dot.min:hover,
+    .term-dot.min:focus-visible   { box-shadow: 0 0 0 3px oklch(78% 0.18 85 / 0.22), 0 0 14px oklch(78% 0.18 85 / 0.5); }
+    .term-dot.max:hover,
+    .term-dot.max:focus-visible   { box-shadow: 0 0 0 3px oklch(70% 0.19 148 / 0.25), 0 0 14px oklch(70% 0.19 148 / 0.6); }
+
+    .term-dot:hover::after,
+    .term-dot:focus-visible::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+</style>
