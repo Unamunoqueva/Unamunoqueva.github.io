@@ -1,0 +1,68 @@
+---
+interface Group {
+  title: string;
+  items: string[];
+}
+
+const groups: Group[] = [
+  {
+    title: "Sistemas & Virtualización",
+    items: ["Linux", "Windows Server", "VMware vSphere", "Proxmox"],
+  },
+  {
+    title: "Contenedores & Orquestación",
+    items: ["Docker", "Docker Compose", "Kubernetes (básico)"],
+  },
+  {
+    title: "Automatización & CI/CD",
+    items: ["Ansible", "Jenkins", "GitHub Actions", "n8n", "Bash"],
+  },
+  {
+    title: "Redes & Edge",
+    items: ["nginx", "Apache", "Cloudflare Tunnel", "HAProxy"],
+  },
+  {
+    title: "Bases de datos",
+    items: ["PostgreSQL", "MySQL", "SQL Server", "Redis"],
+  },
+  {
+    title: "Lenguajes",
+    items: ["Python", "Bash", "Go", "TypeScript"],
+  },
+  {
+    title: "IA aplicada",
+    items: [
+      "Claude / Anthropic API",
+      "OpenAI API",
+      "MCP (Model Context Protocol)",
+      "Agentes custom",
+      "LangChain",
+    ],
+  },
+  {
+    title: "Observabilidad",
+    items: ["Prometheus", "Grafana", "ELK"],
+  },
+];
+---
+
+<div class="grid gap-4 sm:grid-cols-2">
+  {
+    groups.map((g) => (
+      <div
+        class="reveal rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)]/80 p-5 backdrop-blur transition hover:border-[var(--color-accent)]/60"
+      >
+        <h3 class="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-accent)]">
+          {g.title}
+        </h3>
+        <ul class="flex flex-wrap gap-2">
+          {g.items.map((it) => (
+            <li class="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-2.5 py-1 font-mono text-xs text-[var(--color-fg)]">
+              {it}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+</div>

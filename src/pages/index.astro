@@ -1,0 +1,36 @@
+---
+import Layout from "../layouts/Layout.astro";
+import NavBar from "../components/NavBar.astro";
+import TerminalHero from "../components/TerminalHero.astro";
+import Section from "../components/Section.astro";
+import Stack from "../components/Stack.astro";
+import Projects from "../components/Projects.astro";
+import CV from "../components/CV.astro";
+import Contact from "../components/Contact.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout>
+  <a id="top"></a>
+  <NavBar />
+
+  <TerminalHero />
+
+  <Section id="stack" label="ls ~/stack" title="Stack técnico">
+    <Stack />
+  </Section>
+
+  <Section id="proyectos" label="ls ~/proyectos" title="Proyectos destacados">
+    <Projects />
+  </Section>
+
+  <Section id="cv" label="cat ~/cv.md" title="Currículum">
+    <CV />
+  </Section>
+
+  <Section id="contacto" label="./contact.sh" title="Contacto">
+    <Contact />
+  </Section>
+
+  <Footer />
+</Layout>

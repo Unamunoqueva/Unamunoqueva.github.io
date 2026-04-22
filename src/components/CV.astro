@@ -1,0 +1,116 @@
+---
+interface Entry {
+  kind: "work" | "edu";
+  title: string;
+  org: string;
+  period: string;
+  location?: string;
+  bullets: string[];
+}
+
+const entries: Entry[] = [
+  {
+    kind: "work",
+    title: "DevOps Engineer",
+    org: "Interhanse SA",
+    period: "2018 — presente · 8 años",
+    location: "Málaga, España",
+    bullets: [
+      "Diseño y mantenimiento de pipelines CI/CD sobre Jenkins y GitHub Actions para múltiples stacks internos.",
+      "Automatización de infraestructura con Ansible: aprovisionamiento, configuración y compliance sobre flotas de servidores Linux y Windows.",
+      "Administración de entornos VMware vSphere y virtualización corporativa.",
+      "Integración de IA en operaciones: MCP servers propios para Ansible y Jenkins, agentes para diagnóstico y triage, pipelines con steps asistidos por LLM.",
+      "Stack transversal: nginx, PostgreSQL, MySQL, SQL Server, Docker, scripting en Python y Bash.",
+    ],
+  },
+  {
+    kind: "edu",
+    title: "Máster en Python aplicado a Ciberseguridad",
+    org: "Formación especializada",
+    period: "",
+    bullets: [
+      "Desarrollo seguro, pentesting asistido, scripting ofensivo y defensivo.",
+    ],
+  },
+  {
+    kind: "edu",
+    title: "Administración de Sistemas Informáticos en Red (ASIR)",
+    org: "Ciclo Formativo de Grado Superior",
+    period: "",
+    bullets: [
+      "Fundamentos de redes, sistemas operativos, servicios de red, virtualización, bases de datos.",
+    ],
+  },
+];
+
+const workEntries = entries.filter((e) => e.kind === "work");
+const eduEntries = entries.filter((e) => e.kind === "edu");
+---
+
+<div class="grid gap-10 lg:grid-cols-[1.3fr_1fr]">
+  <!-- Experience -->
+  <div class="reveal">
+    <h3 class="mb-5 font-mono text-xs uppercase tracking-[0.25em] text-[var(--color-accent)]">
+      Experiencia
+    </h3>
+    <ol class="relative space-y-6 border-l border-[var(--color-border)] pl-5">
+      {
+        workEntries.map((e) => (
+          <li class="relative">
+            <span class="absolute -left-[27px] top-1.5 h-2.5 w-2.5 rounded-full bg-[var(--color-accent)] shadow-[0_0_0_4px_var(--color-accent-soft)]" />
+            <div class="flex flex-wrap items-baseline gap-x-3">
+              <h4 class="font-sans text-base font-semibold text-[var(--color-fg)]">
+                {e.title}
+              </h4>
+              <span class="font-mono text-xs text-[var(--color-muted)]">
+                @ {e.org}
+              </span>
+            </div>
+            <p class="mt-0.5 font-mono text-[11px] uppercase tracking-widest text-[var(--color-muted)]">
+              {e.period}
+              {e.location && <span class="mx-2">·</span>}
+              {e.location}
+            </p>
+            <ul class="mt-3 space-y-1.5 text-sm text-[var(--color-fg)]/90">
+              {e.bullets.map((b) => (
+                <li class="flex gap-2">
+                  <span class="mt-1 text-[var(--color-accent)]">▹</span>
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  <!-- Education -->
+  <div class="reveal">
+    <h3 class="mb-5 font-mono text-xs uppercase tracking-[0.25em] text-[var(--color-accent)]">
+      Formación
+    </h3>
+    <div class="space-y-4">
+      {
+        eduEntries.map((e) => (
+          <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)]/80 p-5">
+            <h4 class="font-sans text-base font-semibold text-[var(--color-fg)]">
+              {e.title}
+            </h4>
+            <p class="mt-1 font-mono text-[11px] uppercase tracking-widest text-[var(--color-muted)]">
+              {e.org}
+            </p>
+            <ul class="mt-3 space-y-1.5 text-sm text-[var(--color-fg)]/90">
+              {e.bullets.map((b) => (
+                <li class="flex gap-2">
+                  <span class="mt-1 text-[var(--color-accent)]">▹</span>
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>

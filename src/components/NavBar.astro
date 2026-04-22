@@ -1,0 +1,35 @@
+---
+const links = [
+  { href: "#stack", label: "stack" },
+  { href: "#proyectos", label: "proyectos" },
+  { href: "#cv", label: "cv" },
+  { href: "#contacto", label: "contacto" },
+];
+---
+
+<nav
+  class="sticky top-0 z-40 border-b border-[var(--color-border)]/60 bg-[var(--color-bg)]/70 backdrop-blur"
+>
+  <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+    <a
+      href="#top"
+      class="font-mono text-sm font-semibold text-[var(--color-fg)] transition hover:text-[var(--color-accent)]"
+    >
+      <span class="text-[var(--color-accent)]">~/</span>lupi
+    </a>
+    <ul class="flex gap-4 font-mono text-xs sm:gap-6 sm:text-[13px]">
+      {
+        links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              class="text-[var(--color-muted)] transition hover:text-[var(--color-accent)]"
+            >
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</nav>

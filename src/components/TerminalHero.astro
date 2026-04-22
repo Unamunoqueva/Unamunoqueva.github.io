@@ -1,0 +1,181 @@
+---
+const lines: Array<{ prompt?: string; text: string; kind?: "cmd" | "label" | "value" | "quote" | "divider" | "blank" }> = [
+  { prompt: "visitor@lupi.dev", text: "whoami", kind: "cmd" },
+  { text: "──────────────────────────────────────────", kind: "divider" },
+  { text: "Nombre        José Luis Lupiáñez Serrano", kind: "value" },
+  { text: "Alias         lupi", kind: "value" },
+  { text: "Rol           DevOps Engineer", kind: "value" },
+  { text: "Empresa       Interhanse SA · 8 años", kind: "value" },
+  { text: "Ubicación     Málaga, España", kind: "value" },
+  { text: "Especialidad  CI/CD · Automatización · IA aplicada", kind: "value" },
+  { text: "Stack         Linux · VMware · Docker · Ansible · nginx · SQL", kind: "value" },
+  { text: "", kind: "blank" },
+  { prompt: "visitor@lupi.dev", text: "cat sobre-mi.md", kind: "cmd" },
+  {
+    text:
+      "DevOps con ocho años picando infraestructura, pipelines y automatizaciones " +
+      "en Interhanse SA. Convierto procesos manuales en sistemas que se ejecutan, " +
+      "monitorizan y reparan solos. En los últimos dos años, integrando IA en cada " +
+      "eslabón del ciclo operativo: agentes que diagnostican incidentes, pipelines " +
+      "que se corrigen con un LLM, MCP servers custom para Ansible y Jenkins.",
+    kind: "quote",
+  },
+];
+---
+
+<section class="relative flex min-h-screen items-center justify-center px-4 py-16 sm:px-6">
+  <div class="w-full max-w-3xl">
+    <!-- Fake terminal chrome -->
+    <div
+      class="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-soft)] shadow-2xl shadow-black/50 backdrop-blur"
+    >
+      <!-- Window bar -->
+      <header
+        class="flex items-center gap-2 border-b border-[var(--color-border)] bg-[oklch(18%_0.025_260)] px-4 py-2.5"
+      >
+        <span class="h-3 w-3 rounded-full bg-[oklch(62%_0.2_25)]"></span>
+        <span class="h-3 w-3 rounded-full bg-[oklch(78%_0.18_85)]"></span>
+        <span class="h-3 w-3 rounded-full bg-[oklch(70%_0.19_148)]"></span>
+        <span
+          class="ml-4 font-mono text-[11px] tracking-wide text-[var(--color-muted)]"
+        >
+          visitor@lupi.dev — zsh — 82×24
+        </span>
+      </header>
+
+      <!-- Terminal body -->
+      <div
+        id="term-body"
+        class="min-h-[380px] px-5 py-5 font-mono text-[13.5px] leading-7 text-[var(--color-fg)] sm:text-sm"
+      >
+        {
+          lines.map((line, i) => (
+            <div
+              class="term-line"
+              data-idx={i}
+              data-kind={line.kind || "value"}
+              data-prompt={line.prompt || ""}
+              data-text={line.text}
+            />
+          ))
+        }
+        <div id="term-cursor" class="cursor"></div>
+      </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <p
+      class="mt-10 text-center font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-muted)]"
+    >
+      <span aria-hidden="true">↓</span> baja para ver más <span aria-hidden="true">↓</span>
+    </p>
+  </div>
+</section>
+
+<script>
+  type Kind = "cmd" | "label" | "value" | "quote" | "divider" | "blank";
+
+  const lineEls = Array.from(
+    document.querySelectorAll<HTMLElement>("#term-body .term-line")
+  );
+  const cursor = document.getElementById("term-cursor");
+
+  function render(el: HTMLElement, text: string, kind: Kind, prompt: string) {
+    let html = "";
+    if (kind === "cmd") {
+      html =
+        `<span class="text-[var(--color-accent)]">${prompt}</span>` +
+        `<span class="text-[var(--color-muted)]">:</span>` +
+        `<span class="text-[var(--color-link)]">~</span>` +
+        `<span class="text-[var(--color-muted)]">$</span> ` +
+        `<span class="text-[var(--color-fg)]">${text}</span>`;
+    } else if (kind === "divider") {
+      html = `<span class="text-[var(--color-border)]">${text}</span>`;
+    } else if (kind === "value") {
+      const match = text.match(/^(\S+)\s{2,}(.*)$/);
+      if (match) {
+        html =
+          `<span class="text-[var(--color-muted)]">${match[1].padEnd(13, " ")}</span>` +
+          ` <span class="text-[var(--color-fg)]">${match[2]}</span>`;
+      } else {
+        html = `<span>${text}</span>`;
+      }
+    } else if (kind === "quote") {
+      html = `<span class="text-[var(--color-fg)]">${text}</span>`;
+    } else {
+      html = "&nbsp;";
+    }
+    el.innerHTML = html;
+  }
+
+  async function sleep(ms: number) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  async function typeLine(el: HTMLElement) {
+    const text = el.dataset.text || "";
+    const kind = (el.dataset.kind || "value") as Kind;
+    const prompt = el.dataset.prompt || "";
+
+    if (kind === "cmd") {
+      // Type the command character by character
+      let typed = "";
+      for (const ch of text) {
+        typed += ch;
+        render(el, typed, "cmd", prompt);
+        await sleep(38 + Math.random() * 22);
+      }
+      await sleep(220);
+    } else if (kind === "quote") {
+      // Longer paragraph — reveal in small bursts to feel fast but alive
+      let typed = "";
+      const step = 3;
+      for (let i = 0; i < text.length; i += step) {
+        typed = text.slice(0, i + step);
+        render(el, typed, "quote", "");
+        await sleep(10);
+      }
+    } else {
+      render(el, text, kind, prompt);
+      await sleep(80);
+    }
+  }
+
+  async function run() {
+    // Small delay so the user can see the empty terminal for a beat
+    await sleep(300);
+    for (const el of lineEls) {
+      await typeLine(el);
+    }
+    // Cursor keeps blinking at the end; nothing else to do
+  }
+
+  // Only run the typing intro once per session
+  const key = "term-intro-played";
+  if (sessionStorage.getItem(key)) {
+    lineEls.forEach((el) =>
+      render(
+        el,
+        el.dataset.text || "",
+        (el.dataset.kind || "value") as Kind,
+        el.dataset.prompt || ""
+      )
+    );
+    if (cursor) cursor.style.display = "none";
+  } else {
+    sessionStorage.setItem(key, "1");
+    run();
+  }
+</script>
+
+<style>
+  #term-body {
+    background:
+      linear-gradient(180deg, oklch(19% 0.02 260 / 0.6), oklch(17% 0.02 260 / 0.6));
+  }
+  .term-line {
+    min-height: 1.75rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+</style>

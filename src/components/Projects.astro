@@ -1,0 +1,122 @@
+---
+interface Project {
+  name: string;
+  tagline: string;
+  description: string;
+  tech: string[];
+  repo?: string;            // URL to the public repo (if any)
+  visibility: "public" | "private";
+}
+
+const projects: Project[] = [
+  {
+    name: "Ansible MCP Server",
+    tagline: "Automatización IaC controlada por un LLM",
+    description:
+      "Servidor MCP (Model Context Protocol) que expone operaciones de Ansible como herramientas invocables desde un agente IA: inventario, playbooks, ejecuciones ad-hoc. Convierte prompts en despliegues reproducibles.",
+    tech: ["Python", "Ansible", "MCP", "Claude"],
+    visibility: "private",
+  },
+  {
+    name: "Jenkins MCP Server",
+    tagline: "Jenkins a un chat de distancia",
+    description:
+      "Puente MCP que permite a un agente consultar y disparar jobs de Jenkins, leer logs de builds y actuar sobre pipelines — ideal para diagnósticos rápidos y triage automatizado de CI.",
+    tech: ["Python", "Jenkins API", "MCP"],
+    visibility: "private",
+  },
+  {
+    name: "Domain Monitoring",
+    tagline: "Monitorización de dominios full-stack",
+    description:
+      "Plataforma Django (front + back) para monitorizar el estado y la expiración de dominios corporativos, con alertas programadas. Desde el modelo hasta el dashboard.",
+    tech: ["Python", "Django", "PostgreSQL"],
+    visibility: "private",
+  },
+  {
+    name: "Sysadmin Panel",
+    tagline: "Panel interno para administración de infra",
+    description:
+      "Interfaz web centralizada para operaciones de administración sobre múltiples servidores: estado, acciones rutinarias y reporting. Pensada para equipos de sistemas que quieren reemplazar scripts sueltos por un punto de entrada único.",
+    tech: ["Python", "Linux", "Bash"],
+    visibility: "private",
+  },
+  {
+    name: "gentle-ai",
+    tagline: "Herramienta en Go con IA",
+    description:
+      "Experimento en Go para integrar modelos de lenguaje en flujos de CLI — exploración del stack IA fuera de Python.",
+    tech: ["Go", "LLM"],
+    repo: "https://github.com/Unamunoqueva/gentle-ai",
+    visibility: "public",
+  },
+  {
+    name: "Gym Tracking (Android)",
+    tagline: "App nativa de tracking de entrenos",
+    description:
+      "Aplicación Android en Kotlin para registrar rutinas de gimnasio, series y progreso. Lado 'producto' del perfil — diseño, estado persistente y UX mobile.",
+    tech: ["Kotlin", "Android"],
+    visibility: "private",
+  },
+];
+---
+
+<div class="grid gap-5 sm:grid-cols-2">
+  {
+    projects.map((p) => (
+      <article
+        class="reveal group relative flex h-full flex-col rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)]/80 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-[var(--color-accent)]/60 hover:shadow-[0_0_0_1px_var(--color-accent-soft)]"
+      >
+        <header class="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <h3 class="font-sans text-lg font-semibold text-[var(--color-fg)]">
+              {p.name}
+            </h3>
+            <p class="mt-1 font-mono text-xs text-[var(--color-muted)]">
+              {p.tagline}
+            </p>
+          </div>
+          <span
+            class={`shrink-0 rounded-md border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest ${
+              p.visibility === "public"
+                ? "border-[var(--color-accent)]/50 text-[var(--color-accent)]"
+                : "border-[var(--color-border)] text-[var(--color-muted)]"
+            }`}
+          >
+            {p.visibility === "public" ? "público" : "privado"}
+          </span>
+        </header>
+
+        <p class="mb-4 text-sm leading-relaxed text-[var(--color-fg)]/90">
+          {p.description}
+        </p>
+
+        <ul class="mb-5 flex flex-wrap gap-1.5">
+          {p.tech.map((t) => (
+            <li class="rounded-md bg-[var(--color-bg-soft)] px-2 py-0.5 font-mono text-[11px] text-[var(--color-muted)]">
+              {t}
+            </li>
+          ))}
+        </ul>
+
+        <div class="mt-auto">
+          {p.repo ? (
+            <a
+              href={p.repo}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 font-mono text-xs text-[var(--color-link)] transition hover:text-[var(--color-accent)]"
+            >
+              <span>ver repo</span>
+              <span aria-hidden="true">→</span>
+            </a>
+          ) : (
+            <span class="font-mono text-xs text-[var(--color-muted)]">
+              código disponible bajo petición
+            </span>
+          )}
+        </div>
+      </article>
+    ))
+  }
+</div>

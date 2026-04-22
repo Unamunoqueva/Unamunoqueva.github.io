@@ -1,0 +1,25 @@
+---
+interface Props {
+  id: string;
+  label: string;   // command-style label shown above the title
+  title: string;
+}
+
+const { id, label, title } = Astro.props;
+---
+
+<section id={id} class="relative px-4 py-20 sm:px-6 sm:py-28">
+  <div class="mx-auto w-full max-w-4xl">
+    <header class="reveal mb-10 sm:mb-14">
+      <p class="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-accent)]">
+        <span class="text-[var(--color-muted)]">$</span> {label}
+      </p>
+      <h2
+        class="mt-3 font-sans text-3xl font-semibold tracking-tight text-[var(--color-fg)] sm:text-4xl"
+      >
+        {title}
+      </h2>
+    </header>
+    <slot />
+  </div>
+</section>
