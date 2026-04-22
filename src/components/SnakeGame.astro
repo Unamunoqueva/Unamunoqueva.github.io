@@ -331,12 +331,6 @@
       if (snake.length) {
         drawCell(snake[snake.length - 1], COLOR.head, 1);
       }
-
-      // Score in bottom-right corner of canvas
-      ctx!.fillStyle = COLOR.muted;
-      ctx!.font = "500 11px 'JetBrains Mono', monospace";
-      ctx!.textAlign = "right";
-      ctx!.fillText(`score ${score}`, canvas!.width - 8, canvas!.height - 8);
     }
 
     // ---------- controls ----------
@@ -422,8 +416,15 @@
   #snake-canvas {
     image-rendering: pixelated;
     outline: none;
+    /* Stops the page from scrolling while swiping to steer the snake on mobile. */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
   #snake-canvas:focus-visible {
     box-shadow: 0 0 0 2px var(--color-accent-soft);
+  }
+  #snake-overlay {
+    touch-action: none;
   }
 </style>
